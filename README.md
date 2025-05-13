@@ -5,7 +5,7 @@ It is based on the [Data Carpentry Variant Calling Workflow lesson](https://data
 
 ## Dependencies
 
-[Docker](https://www.docker.com/get-started) is used to run various programs. The docker daemon needs to be running so that containers can be launched. [rix](https://github.com/ropensci/rix) is used to maintain the environment for running for now Docker. We will afterward get rid of docker if i manage to set add the bwa and else dependencies by building a proper get-env.R like in the [rixpress demos](https://github.com/b-rodrigues/rixpress_demos).
+[Docker](https://www.docker.com/get-started) is used to run various programs. The docker daemon needs to be running so that containers can be launched. [rix](https://github.com/ropensci/rix) is used to maintain the environment for running for now Docker. We will afterward get rid of docker if i manage to set add the bwa and other dependencies by building a proper get-env.R like in the [rixpress demos](https://github.com/b-rodrigues/rixpress_demos).
 
 Install [nix](https://nixos.org/download/)
 
@@ -43,8 +43,39 @@ nix-shell
 ```
 
 
-Run  `Rscript -e 'targets::tar_make()'` in the nix shell.
+Run  `Rscript -e 'targets::tar_make()'` in the nix shell. but before run the vizualization in a R session
 
+```r
+ targets::tar_visnetwork()
+
+```
+
+```r
+sessionInfo()
+#R version 4.3.2 (2023-10-31)
+#Platform: x86_64-pc-linux-gnu (64-bit)
+#Running under: Ubuntu 24.04.2 LTS
+
+#Matrix products: default
+#BLAS/LAPACK: /nix/store/jx5r3fyz26nvrj5zcx2f7fc2yszfalwb-blas-3/lib/libblas.so.3;  LAPACK version 3.11.0
+
+#locale:
+# [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+# [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ #[5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ #[7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+# [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+#[11] LC_MEASUREMENT=en_US.UTF-8 #LC_IDENTIFICATION=C       
+
+#time zone: Asia/Dubai
+#tzcode source: system (glibc)
+
+#attached base packages:
+#[1] stats     graphics  grDevices utils     #datasets  methods   base     
+
+#loaded via a namespace (and not attached):
+#[1] compiler_4.3.2 cli_3.6.2      #jsonlite_1.8.8 rlang_1.1.2 
+```
 ## TODO
 
 - [ ] remove docker dependency alltogheter by adding the bioinfo shell tools to the nix enviroment. This packages can be installed from git mostly. A template is found [here](https://git.sharcnet.ca/nix/nixpkgs/-/blob/9190dbcc0e4f42487886916a0309aa3236d76df6/pkgs/applications/science/biology/bwa/default.nix)
