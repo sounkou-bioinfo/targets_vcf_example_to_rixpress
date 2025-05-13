@@ -48,6 +48,7 @@ Run  `Rscript -e 'targets::tar_make()'` in the nix shell.
 ## TODO
 
 - [ ] remove docker dependency alltogheter by adding the bioinfo shell tools to the nix enviroment. This packages can be installed from git mostly. A template is found [here](https://git.sharcnet.ca/nix/nixpkgs/-/blob/9190dbcc0e4f42487886916a0309aa3236d76df6/pkgs/applications/science/biology/bwa/default.nix)
+- [ ] Port the targets pipeline to (rixpress)[https://github.com/b-rodrigues/rixpress]
 
 
 ## License
