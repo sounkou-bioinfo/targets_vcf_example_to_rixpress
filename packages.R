@@ -1,5 +1,4 @@
 ## library() calls go here
-library(babelwhale)
 library(future)
 library(future.callr)
 library(conflicted)
@@ -9,4 +8,5 @@ library(tidyverse)
 library(targets)
 library(tarchetypes)
 library(rmarkdown)
+library(processx)
 conflicts_prefer(dplyr::filter)
