@@ -286,6 +286,7 @@ let
      
   system_packages = builtins.attrValues {
     inherit (pkgs) 
+      bwa
       glibcLocales
       nix
       R;
