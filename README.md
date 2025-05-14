@@ -5,7 +5,7 @@ It is based on the [Data Carpentry Variant Calling Workflow lesson](https://data
 
 ## Dependencies
 
-[Docker](https://www.docker.com/get-started) is used to run various programs. The docker daemon needs to be running so that containers can be launched. [rix](https://github.com/ropensci/rix) is used to maintain the environment for running for now Docker. We will afterward get rid of docker if i manage to set add the bwa and other dependencies by building a proper get-env.R like in the [rixpress demos](https://github.com/b-rodrigues/rixpress_demos).
+[rix](https://github.com/ropensci/rix) is used to maintain the R environment and system dependencies like in the [rixpress demos](https://github.com/b-rodrigues/rixpress_demos).
 
 Install [nix](https://nixos.org/download/)
 
@@ -26,11 +26,11 @@ nix-build default.nix
 This takes a bit of time the first time around.
 
 
-The nix env includes R and packages required the workflow. The [rix](https://rstudio.github.io/renv/index.html) R package was used to convert the renv.lock to default.nix 
+The nix env includes R and packages required the workflow. The [rix](https://rstudio.github.io/renv/index.html) R package was used to convert the original renv.lock to default.nix  and adding system tools to remove the docker dependency.
 
 
 ```r
-rix::renv2nix('renv.lock',".")
+renv2nix("renv.lock", ".", system_pkgs = c("bwa", "samtools", "bcftools"))
 ```
 
 ## Running the analysis
@@ -78,8 +78,7 @@ sessionInfo()
 ```
 ## TODO
 
-- [ ] remove docker dependency alltogheter by adding the bioinfo shell tools to the nix enviroment. This packages can be installed from git mostly. A template is found [here](https://git.sharcnet.ca/nix/nixpkgs/-/blob/9190dbcc0e4f42487886916a0309aa3236d76df6/pkgs/applications/science/biology/bwa/default.nix)
-- [ ] Port the targets pipeline to (rixpress)[https://github.com/b-rodrigues/rixpress]
+- [ ] Port the targets pipeline to [rixpress](https://github.com/b-rodrigues/rixpress)
 
 
 ## License

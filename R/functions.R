@@ -4,7 +4,6 @@
 #' @param file_out Path to write unzipped data
 #' @return Path to the downloaded, unzipped data
 download_and_gunzip <- function(url, file_out) {
-
   temp_file <- tempfile(pattern = digest::digest(url))
   curl::curl_download(url, destfile = temp_file)
   R.utils::gunzip(
@@ -14,7 +13,50 @@ download_and_gunzip <- function(url, file_out) {
     remove = TRUE
   )
   file_out
+}
 
+#' Run commands using processx
+#'
+#' @param command The command to run
+#' @param args Character vector of arguments to the command
+#' @param wd Working directory
+#' @param stdout Where to direct standard output (NULL, "" or a filename)
+#' @param stderr Where to direct standard error (NULL, "" or a filename)
+#' @param env Environment variables to set for the child process
+#' @param echo Logical, whether to print stdout and stderr to the screen
+#' @param container_id Ignored, kept for compatibility
+#' @param file Named character vector of file arguments that should be prepared
+#' @return Exit status of the process
+#'
+#' @author Joel Nitta,Sounkou Mahamane Toure, Bruno Rodrigues, Clause 3.7 Sonnet
+run_processx <- function(command, args = NULL, wd = NULL, stdout = NULL,
+                         stderr = NULL, env = NULL, echo = FALSE,
+                         container_id = NULL, file = NULL) {
+  # Prepare file arguments if needed
+  if (!is.null(file)) {
+    for (i in seq_along(file)) {
+      name <- names(file)[i]
+      idx <- which(args == name)
+      if (length(idx) > 0) {
+        args[idx + 1] <- file[i]
+      }
+    }
+  }
+
+  # Run the command
+  result <- processx::run(
+    command = command,
+    args = args,
+    wd = wd,
+    stdout = stdout,
+    stderr = stderr,
+    env = env,
+    echo = echo,
+    error_on_status = FALSE
+  )
+
+  # Return invisibly
+  invisible(result$status)
 }
 
 #' Download and unzip a tar arhive
@@ -24,7 +66,6 @@ download_and_gunzip <- function(url, file_out) {
 #' @param dir_out Directory to unzip files
 #' @return Path to the downloaded, unzipped data files
 download_and_untar <- function(url, dir_out) {
-
   temp_file <- tempfile(pattern = digest::digest(url))
   curl::curl_download(url, destfile = temp_file)
   utils::untar(
@@ -36,7 +77,6 @@ download_and_untar <- function(url, dir_out) {
 
   list.files(dir_out, full.names = TRUE, recursive = TRUE) %>%
     fs::path_norm()
-
 }
 
 #' Index database sequences in the FASTA format for BWA
@@ -48,14 +88,14 @@ download_and_untar <- function(url, dir_out) {
 #' @return Path to output files
 #'
 bwa_index <- function(fasta_in, prefix, wd) {
-  run_auto_mount(
-    container_id = "quay.io/biocontainers/bwa:0.7.8--hed695b0_5",
+  run_processx(
     command = "bwa",
     wd = wd,
     args = c(
       "index",
       file = fasta_in,
-      "-p", prefix)
+      "-p", prefix
+    )
   )
   # Return path to output
   fs::path(wd, paste0(prefix, c(".amb", ".ann", ".pac", ".bwt", ".sa")))
@@ -72,7 +112,6 @@ bwa_index <- function(fasta_in, prefix, wd) {
 #' @return Path to output
 #'
 bwa_mem <- function(f_read, r_read, ref_files, out_dir) {
-
   # Extract ref index ref_prefix (part of file name before extension)
   ref_prefix <- fs::path_file(ref_files) %>%
     fs::path_ext_remove() %>%
@@ -88,8 +127,8 @@ bwa_mem <- function(f_read, r_read, ref_files, out_dir) {
   ref <- fs::path(ref_dir, ref_prefix)
 
   # Extract reads prefix, format output file
-  f_prefix <- str_match(f_read, "(SRR[0-9]+)_") %>% magrittr::extract(,2)
-  r_prefix <- str_match(r_read, "(SRR[0-9]+)_") %>% magrittr::extract(,2)
+  f_prefix <- str_match(f_read, "(SRR[0-9]+)_") %>% magrittr::extract(, 2)
+  r_prefix <- str_match(r_read, "(SRR[0-9]+)_") %>% magrittr::extract(, 2)
   assertthat::assert_that(
     f_prefix == r_prefix,
     msg = "Read prefixes don't match"
@@ -99,19 +138,18 @@ bwa_mem <- function(f_read, r_read, ref_files, out_dir) {
     glue::glue("{f_prefix}.sam")
   )
 
-  run_auto_mount(
-    container_id = "quay.io/biocontainers/bwa:0.7.8--hed695b0_5",
+  run_processx(
     command = "bwa",
     args = c(
       "mem",
       file = ref,
       file = f_read,
-      file = r_read),
+      file = r_read
+    ),
     stdout = outfile
   )
 
   outfile
-
 }
 
 #' Convert a SAM file to a BAM file
@@ -122,7 +160,6 @@ bwa_mem <- function(f_read, r_read, ref_files, out_dir) {
 #' @return Path to output BAM file: file extension will be changed to '.bam'
 #'
 sam_to_bam <- function(sam, out_dir) {
-
   # Format output file
   out_file <-
     fs::path_file(sam) %>%
@@ -130,19 +167,18 @@ sam_to_bam <- function(sam, out_dir) {
     fs::path_ext_set(".bam") %>%
     fs::path(out_dir, .)
 
-  run_auto_mount(
-    container_id = "quay.io/biocontainers/samtools:1.9--h91753b0_8",
+  run_processx(
     command = "samtools",
     args = c(
       "view",
       "-S",
       "-b",
-      file = sam),
+      file = sam
+    ),
     stdout = out_file
   )
 
   out_file
-
 }
 
 #' Sort a BAM file
@@ -153,7 +189,6 @@ sam_to_bam <- function(sam, out_dir) {
 #' ".bam" part of original file with ".sorted.bam"
 #'
 sort_bam <- function(bam, out_dir = "results/bam/sorted") {
-
   # Format output file
   out_file <-
     fs::path_file(bam) %>%
@@ -161,17 +196,16 @@ sort_bam <- function(bam, out_dir = "results/bam/sorted") {
     fs::path_ext_set(".sorted.bam") %>%
     fs::path(out_dir, .)
 
-  run_auto_mount(
-    container_id = "quay.io/biocontainers/samtools:1.9--h91753b0_8",
+  run_processx(
     command = "samtools",
     args = c(
       "sort",
-      file = bam),
+      file = bam
+    ),
     stdout = out_file
   )
 
   out_file
-
 }
 
 #' Run multi-way pileup producing genotype likelihoods
@@ -181,20 +215,19 @@ sort_bam <- function(bam, out_dir = "results/bam/sorted") {
 #' @param out_file Path to write output
 #' @return Path to output file
 bcftools_mpileup <- function(ref, align, out_file) {
-
-  run_auto_mount(
-    container_id = "quay.io/biocontainers/bcftools:1.9--ha228f0b_4",
+  run_processx(
     command = "bcftools",
     args = c(
       "mpileup",
       "-O", "b", # Output compressed BCF (b)
-      "-f", file = ref,
-      file = align),
+      "-f",
+      file = ref,
+      file = align
+    ),
     stdout = out_file
   )
 
   out_file
-
 }
 
 #' SNP/indel calling in BCF tools (former "view")
@@ -205,19 +238,17 @@ bcftools_mpileup <- function(ref, align, out_file) {
 #' @return Path to output
 #'
 bcftools_call <- function(bcf, out_file, other_args = NULL) {
-
-  run_auto_mount(
-    container_id = "quay.io/biocontainers/bcftools:1.9--ha228f0b_4",
+  run_processx(
     command = "bcftools",
     args = c(
       "call",
       other_args,
-      file = bcf),
+      file = bcf
+    ),
     stdout = out_file
   )
 
   out_file
-
 }
 
 #' Apply fixed-threshold filters to VCF
@@ -229,19 +260,17 @@ bcftools_call <- function(bcf, out_file, other_args = NULL) {
 #' @author Joel Nitta
 #' @export
 bcftools_filter <- function(vcf, other_args = NULL, out_file) {
-
-  run_auto_mount(
-    container_id = "quay.io/biocontainers/bcftools:1.9--ha228f0b_4",
+  run_processx(
     command = "bcftools",
     args = c(
       "filter",
       other_args,
-      file = vcf),
+      file = vcf
+    ),
     stdout = out_file
   )
 
   out_file
-
 }
 
 #' Load a VCF file into R as a tibble
@@ -252,17 +281,15 @@ bcftools_filter <- function(vcf, other_args = NULL, out_file) {
 #' with the vcf filename
 #'
 load_vcf <- function(vcf) {
-
   data <-
-  suppressMessages(read_tsv(vcf, comment = "##") %>%
-    janitor::clean_names())
+    suppressMessages(read_tsv(vcf, comment = "##") %>%
+      janitor::clean_names())
 
   colnames(data)[length(colnames(data))] <- "results"
 
   data$file <- fs::path_file(vcf)
 
   data
-
 }
 
 # Extract the file prefix from a path
