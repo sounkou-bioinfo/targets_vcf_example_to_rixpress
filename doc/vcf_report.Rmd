@@ -1,6 +1,6 @@
 ---
 title: "VCF report"
-author: "Joel Nitta"
+author: "Joel Nitta, Sounkou Mahamane Toure, Bruno Rodrigues"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: html_document
 editor_options: 
@@ -12,7 +12,7 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 ```{r load-targets, include=FALSE}
-tar_load(filtered_variants_tbl)
+targets::tar_load(filtered_variants_tbl)
 ```
 
 ## Methods
